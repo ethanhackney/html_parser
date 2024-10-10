@@ -1,5 +1,20 @@
 #include "lexer.h"
 
+static std::unordered_map<std::string,int> kwords {
+        {"a", TOK_A_TAG},
+        {"href", TOK_HREF},
+        {"bold", TOK_BOLD},
+        {"html", TOK_HTML},
+        {"download", TOK_DOWNLOAD},
+        {"hreflang", TOK_HREFLANG},
+        {"media", TOK_MEDIA},
+        {"ping", TOK_PING},
+        {"referrerpolicy", TOK_REFERRER_POLICY},
+        {"rel", TOK_REL},
+        {"target", TOK_TARGET},
+        {"type", TOK_TYPE},
+};
+
 lexer::lexer(const std::string& path)
         : _path {path},
         _fp {fopen(path.c_str(), "r")}
@@ -71,16 +86,13 @@ token lexer::next_tok(void)
                                 c = fgetc(_fp);
                         }
                         _putback = c;
-                        if (s == "a")
-                                return token{TOK_A_TAG, s};
-                        if (s == "href")
-                                return token{TOK_HREF, s};
-                        if (s == "bold")
-                                return token{TOK_BOLD, s};
-                        if (s == "html")
-                                return token{TOK_HTML, s};
+
+                        auto p = kwords.find(s);
+                        if (p != kwords.end())
+                                return token{p->second, s};
+
                         errno = EINVAL;
-                        err(EX_USAGE, "bad tagname: %s", s.c_str());
+                        err(EX_USAGE, "bad word: %s", s.c_str());
                 }
 
                 return token{TOK_CHAR, c};

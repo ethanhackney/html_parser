@@ -8,6 +8,7 @@
 #include <sysexits.h>
 #include <cstdio>
 #include <cctype>
+#include <unordered_map>
 
 class lexer {
 private:

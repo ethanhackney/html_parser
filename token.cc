@@ -19,6 +19,14 @@ static void typeok(int type)
         case TOK_CHAR:
         case TOK_SLASH:
         case TOK_HTML:
+        case TOK_DOWNLOAD:
+        case TOK_HREFLANG:
+        case TOK_MEDIA:
+        case TOK_PING:
+        case TOK_REFERRER_POLICY:
+        case TOK_REL:
+        case TOK_TARGET:
+        case TOK_TYPE:
                 break;
         default:
                 errno = EINVAL;
@@ -71,6 +79,14 @@ std::string token::name(void) const
                 "TOK_SLASH",
                 "TOK_BOLD",
                 "TOK_HTML",
+                "TOK_DOWNLOAD",
+                "TOK_HREFLANG",
+                "TOK_MEDIA",
+                "TOK_PING",
+                "TOK_REFERRER_POLICY",
+                "TOK_REL",
+                "TOK_TARGET",
+                "TOK_TYPE",
         };
         return names.at(_type);
 }

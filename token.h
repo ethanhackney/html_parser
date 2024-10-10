@@ -20,6 +20,14 @@ enum {
         TOK_SLASH,
         TOK_BOLD,
         TOK_HTML,
+        TOK_DOWNLOAD,
+        TOK_HREFLANG,
+        TOK_MEDIA,
+        TOK_PING,
+        TOK_REFERRER_POLICY,
+        TOK_REL,
+        TOK_TARGET,
+        TOK_TYPE,
         TOK_COUNT,
 };
 
