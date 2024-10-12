@@ -1,332 +1,368 @@
 #include "lexer.h"
+#include "token.h"
+#include <iostream>
+#include <string>
 #include <unordered_map>
 #include <vector>
-#include <string>
-#include <iostream>
 
-static void cout_space(int space)
-{
-        for (auto i = 0; i < space; i++)
-                std::cout << " ";
-}
+using std::cout;
+
+class text_node;
+class a_node;
+class bold_node;
+
+class node_visitor {
+public:
+        virtual void visit(text_node* n) = 0;
+        virtual void visit(a_node* n) = 0;
+        virtual void visit(bold_node* n) = 0;
+        virtual ~node_visitor() {}
+};
 
 class node {
 public:
-        virtual void dump(int space) = 0;
+        virtual void add_kid(node* n) = 0;
+        virtual node* get_kid(size_t i) = 0;
+        virtual void set_attr(std::string attr, std::string v) = 0;
+        virtual std::string get_attr(std::string attr) = 0;
+        virtual std::unordered_map<std::string,std::string>& attrs(void) = 0;
+        virtual std::vector<node*>& kids(void) = 0;
+        virtual void visit(node_visitor* v) = 0;
         virtual ~node() {}
 };
+
+class internal_node : public node {
+private:
+        std::unordered_map<std::string,std::string> _attrs;
+        std::vector<node*> _kids;
+public:
+        virtual void add_kid(node* n);
+        virtual node* get_kid(size_t i);
+        virtual void set_attr(std::string attr, std::string v);
+        virtual std::string get_attr(std::string attr);
+        virtual std::unordered_map<std::string,std::string>& attrs(void);
+        virtual std::vector<node*>& kids(void);
+        virtual ~internal_node();
+};
+
+internal_node::~internal_node()
+{
+        for (auto k : _kids)
+                delete k;
+}
+
+void internal_node::add_kid(node* n)
+{
+        _kids.push_back(n);
+}
+
+node* internal_node::get_kid(size_t i)
+{
+        return _kids.at(i);
+}
+
+void internal_node::set_attr(std::string attr, std::string v)
+{
+        _attrs[attr] = v;
+}
+
+std::string internal_node::get_attr(std::string attr)
+{
+        return _attrs[attr];
+}
+
+std::unordered_map<std::string,std::string>& internal_node::attrs(void)
+{
+        return _attrs;
+}
+
+std::vector<node*>& internal_node::kids(void)
+{
+        return _kids;
+}
 
 class text_node : public node {
 private:
         int _c;
 public:
         text_node(int c);
-        virtual void dump(int space);
-        virtual ~text_node() {}
+        virtual void visit(node_visitor* v);
+        int c(void);
+        virtual void add_kid(node* n);
+        virtual node* get_kid(size_t i);
+        virtual void set_attr(std::string attr, std::string v);
+        virtual std::string get_attr(std::string attr);
+        virtual std::unordered_map<std::string,std::string>& attrs(void);
+        virtual std::vector<node*>& kids(void);
 };
 
 text_node::text_node(int c)
         : _c {c}
+{}
+
+void text_node::visit(node_visitor* n)
+{
+        n->visit(this);
+}
+
+int text_node::c(void)
+{
+        return _c;
+}
+
+void text_node::add_kid(node* n)
 {
 }
 
-void text_node::dump(int space)
+node* text_node::get_kid(size_t i)
 {
-        cout_space(space);
-        std::cout << "text_node{\n";
-        cout_space(space + 2);
-        std::cout << "'" << (char)_c << "'" << "\n";
-        cout_space(space);
-        std::cout << "}";
+        return nullptr;
 }
 
-class a_node : public node {
-private:
-        std::unordered_map<std::string,std::string> _attrs {};
-        std::vector<node*> _kids {};
+void text_node::set_attr(std::string attr, std::string v)
+{
+}
+
+std::string text_node::get_attr(std::string attr)
+{
+        return "";
+}
+
+std::unordered_map<std::string,std::string>& text_node::attrs(void)
+{
+        static std::unordered_map<std::string,std::string> nil;
+        return nil;
+}
+
+std::vector<node*>& text_node::kids(void)
+{
+        static std::vector<node*> nil;
+        return nil;
+}
+
+class a_node : public internal_node {
 public:
-        void add_kid(node* kid);
-        void set_attr(const std::string& attr, const std::string& value);
-        virtual void dump(int space);
-        virtual ~a_node() {}
-        std::string attr_val(const std::string& attr);
+        virtual void visit(node_visitor* v);
 };
 
-std::string a_node::attr_val(const std::string& attr)
+void a_node::visit(node_visitor* v)
 {
-        return _attrs[attr];
+        v->visit(this);
 }
 
-void a_node::add_kid(node* kid)
-{
-        _kids.push_back(kid);
-}
-
-void a_node::set_attr(const std::string& attr, const std::string& value)
-{
-        _attrs[attr] = value;
-}
-
-void a_node::dump(int space)
-{
-        cout_space(space);
-        std::cout << "a_node{\n";
-        for (auto attr : _attrs) {
-                cout_space(space + 2);
-                std::cout << attr.first << ": " << attr.second << ",\n";
-        }
-
-        cout_space(space + 2);
-        std::cout << "kids: [\n";
-        for (auto k : _kids) {
-                k->dump(space + 4);
-                std::cout << ",\n";
-        }
-
-        cout_space(space);
-        std::cout << "}";
-}
-
-class bold_node : public node {
-private:
-        std::vector<node*> _kids;
+class bold_node : public internal_node {
 public:
-        bold_node(void);
-        virtual void dump(int space);
-        void add_kid(node* n);
-        virtual ~bold_node() {}
+        virtual void visit(node_visitor* v);
 };
 
-bold_node::bold_node(void)
+void bold_node::visit(node_visitor* v)
 {
+        v->visit(this);
 }
 
-void bold_node::dump(int space)
-{
-        cout_space(space);
-        std::cout << "bold_node{\n";
-
-        cout_space(space + 2);
-        std::cout << "kids: [\n";
-        for (auto k : _kids) {
-                k->dump(space + 4);
-                std::cout << ",\n";
-        }
-        cout_space(space + 2);
-        std::cout << "]\n";
-
-        cout_space(space);
-        std::cout << "}";
-}
-
-void bold_node::add_kid(node* n)
-{
-        _kids.push_back(n);
-}
-
-class html_node : public node {
+class dump_visitor : public node_visitor {
 private:
-        std::vector<node*> _kids;
+        int _indent {0};
+
+        void dump_attrs(std::unordered_map<std::string,std::string>& attrs);
+        void dump_kids(std::vector<node*>& kids);
+        void indent(int space);
 public:
-        html_node(void) {}
-        void add_kid(node* n) {_kids.push_back(n);}
-        virtual ~html_node() {}
-        virtual void dump(int space);
+        virtual void visit(text_node* n);
+        virtual void visit(a_node* n);
+        virtual void visit(bold_node* n);
 };
 
-void html_node::dump(int space)
+void dump_visitor::indent(int space)
 {
-        cout_space(space);
-        std::cout << "html_node{\n";
-
-        cout_space(space + 2);
-        std::cout << "kids: [\n";
-        for (auto k : _kids) {
-                k->dump(space + 4);
-                std::cout << ",\n";
-        }
-        cout_space(space + 2);
-        std::cout << "]\n";
-
-        cout_space(space);
-        std::cout << "}";
+        for (auto i = 0; i < space; i++)
+                cout << " ";
 }
 
-class body_node : public node {
+void dump_visitor::visit(text_node* n)
+{
+        indent(_indent);
+        cout << "text_node{\n";
+        indent(_indent + 2);
+        cout << '"' << (char)n->c() << "\"\n";
+        indent(_indent);
+        cout << "}";
+}
+
+void dump_visitor::dump_attrs(std::unordered_map<std::string,std::string>& attrs)
+{
+        indent(_indent);
+        cout << "attrs: {\n";
+        for (auto p : attrs) {
+                indent(_indent + 2);
+                cout << p.first << ": " << p.second << ",\n";
+        }
+        indent(_indent);
+        cout << "}";
+}
+
+void dump_visitor::dump_kids(std::vector<node*>& kids)
+{
+        indent(_indent);
+        cout << "kids: [\n";
+        for (auto k : kids) {
+                _indent += 2;
+                k->visit(this);
+                cout << ",\n";
+                _indent -= 2;
+
+        }
+        indent(_indent);
+        cout << "]";
+}
+
+void dump_visitor::visit(a_node* n)
+{
+        indent(_indent);
+        cout << "a_node{\n";
+
+        _indent += 2;
+        dump_attrs(n->attrs());
+        _indent -= 2;
+        cout << ",\n";
+
+        _indent += 2;
+        dump_kids(n->kids());
+        _indent -= 2;
+        cout << "\n";
+
+        indent(_indent);
+        cout << "}";
+}
+
+void dump_visitor::visit(bold_node* n)
+{
+        indent(_indent);
+        cout << "bold_node{\n";
+
+        _indent += 2;
+        dump_attrs(n->attrs());
+        _indent -= 2;
+        cout << ",\n";
+
+        _indent += 2;
+        dump_kids(n->kids());
+        _indent -= 2;
+        cout << "\n";
+
+        indent(_indent);
+        cout << "}";
+}
+
+class parser {
 private:
-        std::vector<node*> _kids;
+        lexer& _lex;
+        std::vector<node*> _roots;
+
+        node* do_parse(void);
+        node* parse_tag(void);
+        node* parse_a_tag(void);
 public:
-        body_node(void) {}
-        void add_kid(node* n) {_kids.push_back(n);}
-        virtual ~body_node() {}
-        virtual void dump(int space);
+        parser(lexer& lex);
+        void parse(void);
+        int eof(void);
+        node* get_root(size_t i);
+        size_t n_roots(void);
+        ~parser();
 };
 
-void body_node::dump(int space)
+parser::~parser()
 {
-        cout_space(space);
-        std::cout << "body_node{\n";
-
-        cout_space(space + 2);
-        std::cout << "kids: [\n";
-        for (auto k : _kids) {
-                k->dump(space + 4);
-                std::cout << ",\n";
-        }
-        cout_space(space + 2);
-        std::cout << "]\n";
-
-        cout_space(space);
-        std::cout << "}";
+        for (auto r : _roots)
+                delete r;
 }
 
-node *parse(lexer& lex);
-node *parse_tag(lexer& lex);
-node *parse_a_tag(lexer& lex);
-node *parse_bold_tag(lexer& lex);
-node *parse_html_tag(lexer& lex);
-node *parse_body_tag(lexer& lex);
-void node_free(node* n);
-
-std::vector<node*> nodes;
-
-int main(void)
+node* parser::get_root(size_t i)
 {
-        lexer lex {"index.html"};
-
-        lex.next();
-        auto n = parse(lex);
-
-        auto h = static_cast<html_node*>(n);
-        h->dump(0);
-        node_free(n);
+        return _roots.at(i);
 }
 
-node *parse(lexer& lex)
+size_t parser::n_roots(void)
 {
-        if (lex.type() == TOK_EOF)
-                return nullptr;
-        else if (lex.type() == TOK_LT)
-                return parse_tag(lex);
-        else {
-                auto n = new text_node{lex.lex().c_str()[0]};
-                nodes.push_back(n);
-                lex.skip(TOK_CHAR);
+        return _roots.size();
+}
+
+parser::parser(lexer& lex)
+        : _lex {lex}
+{
+        _lex.next();
+}
+
+void parser::parse(void)
+{
+        while (_lex.type() != TOK_EOF)
+                _roots.push_back(do_parse());
+}
+
+node* parser::do_parse(void)
+{
+        if (_lex.type() == TOK_LT) {
+                return parse_tag();
+        } else {
+                auto n = new text_node{_lex.lex().c_str()[0]};
+                _lex.skip(TOK_CHAR);
                 return n;
         }
 }
 
-node *parse_tag(lexer& lex)
+node* parser::parse_tag(void)
 {
-        lex.skip(TOK_LT);
-        auto type = lex.type();
+        _lex.skip(TOK_LT);
+        auto type = _lex.type();
+        _lex.skip(type);
 
-        node *n;
+        node* n;
         if (type == TOK_A_TAG) {
-                n = parse_a_tag(lex);
+                n = new a_node{};
         } else if (type == TOK_BOLD) {
-                n = parse_bold_tag(lex);
-        } else if (type == TOK_HTML) {
-                n = parse_html_tag(lex);
-        } else if (type == TOK_BODY) {
-                n = parse_body_tag(lex);
+                n = new bold_node{};
         } else {
                 errno = EINVAL;
-                err(EX_USAGE, "invalid tagname: %s",
-                                lex.name().c_str());
+                err(EX_USAGE, "invalid tagname: %s", token{type}.name().c_str());
         }
 
-        lex.skip(TOK_LT);
-        lex.skip(TOK_SLASH);
-        lex.skip(type);
-        lex.skip(TOK_GT);
-        return n;
-}
-
-node *parse_a_tag(lexer& lex)
-{
-        lex.skip(TOK_A_TAG);
-
-        auto n = new a_node{};
-        while (lex.type() != TOK_GT) {
-                auto attr = lex.lex();
-                lex.next();
-                lex.skip(TOK_EQ);
-                auto value = lex.lex();
-                lex.next();
-                n->set_attr(attr, value);
+        while (_lex.type() != TOK_GT) {
+                auto attr = _lex.lex();
+                _lex.skip(_lex.type());
+                _lex.skip(TOK_EQ);
+                auto v = _lex.lex();
+                _lex.skip(_lex.type());
+                n->set_attr(attr, v);
         }
-        lex.skip(TOK_GT);
+        _lex.skip(TOK_GT);
 
         for (;;) {
-                if (lex.type() == TOK_LT) {
-                        if (lex.peek().type() == TOK_SLASH)
+                if (_lex.type() == TOK_LT) {
+                        if (_lex.peek().type() == TOK_SLASH)
                                 break;
                 }
-                n->add_kid(parse(lex));
+                n->add_kid(do_parse());
         }
 
-        nodes.push_back(n);
+        _lex.skip(TOK_LT);
+        _lex.skip(TOK_SLASH);
+        _lex.skip(type);
+        _lex.skip(TOK_GT);
         return n;
 }
 
-node *parse_bold_tag(lexer& lex)
+int main(void)
 {
-        auto n = new bold_node{};
-        lex.skip(TOK_BOLD);
-        lex.skip(TOK_GT);
+        lexer l {"index.html"};
+        parser p {l};
 
-        for (;;) {
-                if (lex.type() == TOK_LT) {
-                        if (lex.peek().type() == TOK_SLASH)
-                                break;
-                }
-                n->add_kid(parse(lex));
+        p.parse();
+
+        node_visitor* dv = new dump_visitor{};
+        for (size_t r = 0; r < p.n_roots(); r++) {
+                p.get_root(r)->visit(dv);
+                cout << "\n";
         }
 
-        nodes.push_back(n);
-        return n;
-}
-
-void node_free(node* n)
-{
-        for (auto node : nodes) {
-                delete node;
-        }
-}
-
-node *parse_html_tag(lexer& lex)
-{
-        auto n = new html_node{};
-        lex.skip(TOK_HTML);
-        lex.skip(TOK_GT);
-
-        for (;;) {
-                if (lex.type() == TOK_LT) {
-                        if (lex.peek().type() == TOK_SLASH)
-                                break;
-                }
-                n->add_kid(parse(lex));
-        }
-
-        nodes.push_back(n);
-        return n;
-}
-
-node *parse_body_tag(lexer& lex)
-{
-        auto n = new body_node{};
-        lex.skip(TOK_BODY);
-        lex.skip(TOK_GT);
-
-        for (;;) {
-                if (lex.type() == TOK_LT) {
-                        if (lex.peek().type() == TOK_SLASH)
-                                break;
-                }
-                n->add_kid(parse(lex));
-        }
-
-        nodes.push_back(n);
-        return n;
+        delete dv;
 }
