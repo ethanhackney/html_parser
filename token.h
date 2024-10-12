@@ -28,6 +28,7 @@ enum {
         TOK_REL,
         TOK_TARGET,
         TOK_TYPE,
+        TOK_BODY,
         TOK_COUNT,
 };
 

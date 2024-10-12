@@ -152,11 +152,40 @@ void html_node::dump(int space)
         std::cout << "}";
 }
 
+class body_node : public node {
+private:
+        std::vector<node*> _kids;
+public:
+        body_node(void) {}
+        void add_kid(node* n) {_kids.push_back(n);}
+        virtual ~body_node() {}
+        virtual void dump(int space);
+};
+
+void body_node::dump(int space)
+{
+        cout_space(space);
+        std::cout << "body_node{\n";
+
+        cout_space(space + 2);
+        std::cout << "kids: [\n";
+        for (auto k : _kids) {
+                k->dump(space + 4);
+                std::cout << ",\n";
+        }
+        cout_space(space + 2);
+        std::cout << "]\n";
+
+        cout_space(space);
+        std::cout << "}";
+}
+
 node *parse(lexer& lex);
 node *parse_tag(lexer& lex);
 node *parse_a_tag(lexer& lex);
 node *parse_bold_tag(lexer& lex);
 node *parse_html_tag(lexer& lex);
+node *parse_body_tag(lexer& lex);
 void node_free(node* n);
 
 std::vector<node*> nodes;
@@ -199,6 +228,8 @@ node *parse_tag(lexer& lex)
                 n = parse_bold_tag(lex);
         } else if (type == TOK_HTML) {
                 n = parse_html_tag(lex);
+        } else if (type == TOK_BODY) {
+                n = parse_body_tag(lex);
         } else {
                 errno = EINVAL;
                 err(EX_USAGE, "invalid tagname: %s",
@@ -268,6 +299,24 @@ node *parse_html_tag(lexer& lex)
 {
         auto n = new html_node{};
         lex.skip(TOK_HTML);
+        lex.skip(TOK_GT);
+
+        for (;;) {
+                if (lex.type() == TOK_LT) {
+                        if (lex.peek().type() == TOK_SLASH)
+                                break;
+                }
+                n->add_kid(parse(lex));
+        }
+
+        nodes.push_back(n);
+        return n;
+}
+
+node *parse_body_tag(lexer& lex)
+{
+        auto n = new body_node{};
+        lex.skip(TOK_BODY);
         lex.skip(TOK_GT);
 
         for (;;) {

@@ -13,6 +13,7 @@ static std::unordered_map<std::string,int> kwords {
         {"rel", TOK_REL},
         {"target", TOK_TARGET},
         {"type", TOK_TYPE},
+        {"body", TOK_BODY},
 };
 
 lexer::lexer(const std::string& path)

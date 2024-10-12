@@ -27,6 +27,7 @@ static void typeok(int type)
         case TOK_REL:
         case TOK_TARGET:
         case TOK_TYPE:
+        case TOK_BODY:
                 break;
         default:
                 errno = EINVAL;
@@ -87,6 +88,7 @@ std::string token::name(void) const
                 "TOK_REL",
                 "TOK_TARGET",
                 "TOK_TYPE",
+                "TOK_BODY",
         };
         return names.at(_type);
 }
