@@ -29,6 +29,7 @@ enum {
         TOK_TARGET,
         TOK_TYPE,
         TOK_BODY,
+        TOK_XMLNS,
         TOK_COUNT,
 };
 

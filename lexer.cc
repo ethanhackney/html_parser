@@ -14,6 +14,7 @@ static std::unordered_map<std::string,int> kwords {
         {"target", TOK_TARGET},
         {"type", TOK_TYPE},
         {"body", TOK_BODY},
+        {"xmlns", TOK_XMLNS},
 };
 
 lexer::lexer(const std::string& path)
