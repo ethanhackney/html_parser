@@ -50,6 +50,8 @@ token lexer::next(void)
         return _cur;
 }
 
+static void skip_comment(FILE *fp);
+
 token lexer::next_tok(void)
 {
         for (;;) {
@@ -67,6 +69,11 @@ token lexer::next_tok(void)
                 case EOF:
                         return token{TOK_EOF};
                 case '<':
+                        if ((c = fgetc(_fp)) == '!') {
+                                skip_comment(_fp);
+                                continue;
+                        }
+                        _putback = c;
                         return token{TOK_LT};
                 case '>':
                         return token{TOK_GT};
@@ -74,8 +81,12 @@ token lexer::next_tok(void)
                         return token{TOK_EQ};
                 case '"':
                         s = "";
-                        while ((c = fgetc(_fp)) != '"')
+                        while ((c = fgetc(_fp)) != EOF && c != '"')
                                 s += c;
+                        if (c == EOF) {
+                                errno = EINVAL;
+                                err(EX_USAGE, "bad string");
+                        }
                         return token{TOK_STR, s};
                 case '/':
                         return token{TOK_SLASH};
@@ -98,6 +109,34 @@ token lexer::next_tok(void)
                 }
 
                 return token{TOK_CHAR, c};
+        }
+}
+
+static void skip_comment(FILE *fp)
+{
+        for (;;) {
+                errno = EINVAL;
+
+                auto c = fgetc(fp);
+                if (c == EOF)
+                        err(EX_USAGE, "invalid comment");
+                if (c != '-')
+                        continue;
+
+                c = fgetc(fp);
+                if (c == EOF)
+                        err(EX_USAGE, "invalid comment");
+                if (c != '-')
+                        continue;
+
+                c = fgetc(fp);
+                if (c == EOF)
+                        err(EX_USAGE, "invalid comment");
+                if (c != '>')
+                        continue;
+
+                errno = 0;
+                break;
         }
 }
 
