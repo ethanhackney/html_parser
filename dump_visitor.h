@@ -5,6 +5,7 @@
 #include "bold_node.h"
 #include "html_node.h"
 #include "node_visitor.h"
+#include "p_node.h"
 #include "text_node.h"
 #include <iostream>
 #include <string>
@@ -23,6 +24,7 @@ public:
         virtual void visit(a_node* n);
         virtual void visit(bold_node* n);
         virtual void visit(html_node* n);
+        virtual void visit(p_node* n);
 };
 
 #endif

@@ -30,6 +30,10 @@ enum {
         TOK_TYPE,
         TOK_BODY,
         TOK_XMLNS,
+        TOK_ACCESS_KEY,
+        TOK_LANG,
+        TOK_AUTO_CAPITALIZE,
+        TOK_P_TAG,
         TOK_COUNT,
 };
 

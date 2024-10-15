@@ -52,6 +52,8 @@ node* parser::parse_tag(void)
                 n = new bold_node{};
         } else if (type == TOK_HTML) {
                 n = new html_node{};
+        } else if (type == TOK_P_TAG) {
+                n = new p_node{};
         } else {
                 errno = EINVAL;
                 err(EX_USAGE, "invalid tagname: %s", token{type}.name().c_str());
@@ -60,10 +62,13 @@ node* parser::parse_tag(void)
         while (_lex.type() != TOK_GT) {
                 auto attr = _lex.lex();
                 _lex.skip(_lex.type());
-                _lex.skip(TOK_EQ);
-                auto v = _lex.lex();
-                _lex.skip(_lex.type());
-                n->set_attr(attr, v);
+                n->set_attr(attr, "on");
+                if (_lex.type() == TOK_EQ) {
+                        _lex.skip(TOK_EQ);
+                        auto v = _lex.lex();
+                        _lex.skip(_lex.type());
+                        n->set_attr(attr, v);
+                }
         }
         _lex.skip(TOK_GT);
 

@@ -4,6 +4,7 @@
 class a_node;
 class bold_node;
 class html_node;
+class p_node;
 class text_node;
 
 class node_visitor {
@@ -12,6 +13,7 @@ public:
         virtual void visit(a_node* n) = 0;
         virtual void visit(bold_node* n) = 0;
         virtual void visit(html_node* n) = 0;
+        virtual void visit(p_node* n) = 0;
         virtual ~node_visitor() {}
 };
 

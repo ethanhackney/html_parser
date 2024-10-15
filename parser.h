@@ -5,6 +5,7 @@
 #include "bold_node.h"
 #include "html_node.h"
 #include "lexer.h"
+#include "p_node.h"
 #include "text_node.h"
 #include <vector>
 
@@ -15,7 +16,6 @@ private:
 
         node* do_parse(void);
         node* parse_tag(void);
-        node* parse_a_tag(void);
 public:
         parser(lexer& lex);
         void parse(void);
