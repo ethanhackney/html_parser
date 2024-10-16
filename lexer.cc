@@ -13,12 +13,12 @@ static std::unordered_map<std::string,int> kwords {
         {"rel", TOK_REL},
         {"target", TOK_TARGET},
         {"type", TOK_TYPE},
-        {"body", TOK_BODY},
         {"xmlns", TOK_XMLNS},
         {"accesskey", TOK_ACCESS_KEY},
         {"lang", TOK_LANG},
         {"autocapitalize", TOK_AUTO_CAPITALIZE},
         {"p", TOK_P_TAG},
+        {"body", TOK_BODY_TAG},
 };
 
 lexer::lexer(const std::string& path)

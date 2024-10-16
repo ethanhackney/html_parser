@@ -7,6 +7,7 @@
 #include "node_visitor.h"
 #include "p_node.h"
 #include "text_node.h"
+#include "body_node.h"
 #include <iostream>
 #include <string>
 #include <unordered_map>
@@ -25,6 +26,7 @@ public:
         virtual void visit(bold_node* n);
         virtual void visit(html_node* n);
         virtual void visit(p_node* n);
+        virtual void visit(body_node* n);
 };
 
 #endif

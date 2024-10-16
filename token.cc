@@ -27,12 +27,12 @@ static void typeok(int type)
         case TOK_REL:
         case TOK_TARGET:
         case TOK_TYPE:
-        case TOK_BODY:
         case TOK_XMLNS:
         case TOK_ACCESS_KEY:
         case TOK_LANG:
         case TOK_AUTO_CAPITALIZE:
         case TOK_P_TAG:
+        case TOK_BODY_TAG:
                 break;
         default:
                 errno = EINVAL;
@@ -93,12 +93,12 @@ std::string token::name(void) const
                 "TOK_REL",
                 "TOK_TARGET",
                 "TOK_TYPE",
-                "TOK_BODY",
                 "TOK_XMLNS",
                 "TOK_ACCESS_KEY",
                 "TOK_LANG",
                 "TOK_AUTO_CAPITALIZE",
                 "TOK_P_TAG",
+                "TOK_BODY_TAG",
         };
         return names.at(_type);
 }

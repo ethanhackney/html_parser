@@ -120,3 +120,22 @@ void dump_visitor::visit(p_node* n)
         indent(_indent);
         cout << "}";
 }
+
+void dump_visitor::visit(body_node* n)
+{
+        indent(_indent);
+        cout << "body_node{\n";
+
+        _indent += 2;
+        dump_attrs(n->attrs());
+        _indent -= 2;
+        cout << ",\n";
+
+        _indent += 2;
+        dump_kids(n->kids());
+        _indent -= 2;
+        cout << "\n";
+
+        indent(_indent);
+        cout << "}";
+}

@@ -43,6 +43,7 @@ node* parser::parse_tag(void)
 {
         _lex.skip(TOK_LT);
         auto type = _lex.type();
+
         _lex.skip(type);
 
         node* n;
@@ -54,6 +55,8 @@ node* parser::parse_tag(void)
                 n = new html_node{};
         } else if (type == TOK_P_TAG) {
                 n = new p_node{};
+        } else if (type == TOK_BODY_TAG) {
+                n = new body_node{};
         } else {
                 errno = EINVAL;
                 err(EX_USAGE, "invalid tagname: %s", token{type}.name().c_str());

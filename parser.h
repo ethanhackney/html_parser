@@ -6,6 +6,7 @@
 #include "html_node.h"
 #include "lexer.h"
 #include "p_node.h"
+#include "body_node.h"
 #include "text_node.h"
 #include <vector>
 
