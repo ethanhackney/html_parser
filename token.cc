@@ -33,6 +33,7 @@ static void typeok(int type)
         case TOK_AUTO_CAPITALIZE:
         case TOK_P_TAG:
         case TOK_BODY_TAG:
+        case TOK_DIV_TAG:
                 break;
         default:
                 errno = EINVAL;
@@ -99,6 +100,7 @@ std::string token::name(void) const
                 "TOK_AUTO_CAPITALIZE",
                 "TOK_P_TAG",
                 "TOK_BODY_TAG",
+                "TOK_DIV_TAG",
         };
         return names.at(_type);
 }

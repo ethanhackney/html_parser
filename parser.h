@@ -8,6 +8,7 @@
 #include "p_node.h"
 #include "body_node.h"
 #include "text_node.h"
+#include "div_node.h"
 #include <vector>
 
 class parser {

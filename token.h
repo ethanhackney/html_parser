@@ -34,6 +34,7 @@ enum {
         TOK_AUTO_CAPITALIZE,
         TOK_P_TAG,
         TOK_BODY_TAG,
+        TOK_DIV_TAG,
         TOK_COUNT,
 };
 
