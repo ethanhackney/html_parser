@@ -8,6 +8,7 @@ class p_node;
 class text_node;
 class body_node;
 class div_node;
+class abbr_node;
 
 class node_visitor {
 public:
@@ -18,6 +19,7 @@ public:
         virtual void visit(p_node* n) = 0;
         virtual void visit(body_node* n) = 0;
         virtual void visit(div_node* n) = 0;
+        virtual void visit(abbr_node* n) = 0;
         virtual ~node_visitor() {}
 };
 

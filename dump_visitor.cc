@@ -45,10 +45,10 @@ void dump_visitor::dump_kids(std::vector<node*>& kids)
         cout << "]";
 }
 
-void dump_visitor::visit(a_node* n)
+void dump_visitor::dump_internal_node(const std::string& name, internal_node* n)
 {
         indent(_indent);
-        cout << "a_node{\n";
+        cout << name << "{\n";
 
         _indent += 2;
         dump_attrs(n->attrs());
@@ -62,99 +62,39 @@ void dump_visitor::visit(a_node* n)
 
         indent(_indent);
         cout << "}";
+}
+
+void dump_visitor::visit(a_node* n)
+{
+        dump_internal_node("a_node", n);
 }
 
 void dump_visitor::visit(bold_node* n)
 {
-        indent(_indent);
-        cout << "bold_node{\n";
-
-        _indent += 2;
-        dump_attrs(n->attrs());
-        _indent -= 2;
-        cout << ",\n";
-
-        _indent += 2;
-        dump_kids(n->kids());
-        _indent -= 2;
-        cout << "\n";
-
-        indent(_indent);
-        cout << "}";
+        dump_internal_node("bold_node", n);
 }
 
 void dump_visitor::visit(html_node* n)
 {
-        indent(_indent);
-        cout << "html_node{\n";
-
-        _indent += 2;
-        dump_attrs(n->attrs());
-        _indent -= 2;
-        cout << ",\n";
-
-        _indent += 2;
-        dump_kids(n->kids());
-        _indent -= 2;
-        cout << "\n";
-
-        indent(_indent);
-        cout << "}";
+        dump_internal_node("html_node", n);
 }
 
 void dump_visitor::visit(p_node* n)
 {
-        indent(_indent);
-        cout << "p_node{\n";
-
-        _indent += 2;
-        dump_attrs(n->attrs());
-        _indent -= 2;
-        cout << ",\n";
-
-        _indent += 2;
-        dump_kids(n->kids());
-        _indent -= 2;
-        cout << "\n";
-
-        indent(_indent);
-        cout << "}";
+        dump_internal_node("p_node", n);
 }
 
 void dump_visitor::visit(body_node* n)
 {
-        indent(_indent);
-        cout << "body_node{\n";
+        dump_internal_node("body_node", n);
+}
 
-        _indent += 2;
-        dump_attrs(n->attrs());
-        _indent -= 2;
-        cout << ",\n";
-
-        _indent += 2;
-        dump_kids(n->kids());
-        _indent -= 2;
-        cout << "\n";
-
-        indent(_indent);
-        cout << "}";
+void dump_visitor::visit(abbr_node* n)
+{
+        dump_internal_node("abbr_node", n);
 }
 
 void dump_visitor::visit(div_node* n)
 {
-        indent(_indent);
-        cout << "div_node{\n";
-
-        _indent += 2;
-        dump_attrs(n->attrs());
-        _indent -= 2;
-        cout << ",\n";
-
-        _indent += 2;
-        dump_kids(n->kids());
-        _indent -= 2;
-        cout << "\n";
-
-        indent(_indent);
-        cout << "}";
+        dump_internal_node("div_node", n);
 }

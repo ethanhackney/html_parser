@@ -9,6 +9,7 @@
 #include "text_node.h"
 #include "body_node.h"
 #include "div_node.h"
+#include "abbr_node.h"
 #include <iostream>
 #include <string>
 #include <unordered_map>
@@ -20,6 +21,7 @@ private:
 
         void dump_attrs(std::unordered_map<std::string,std::string>& attrs);
         void dump_kids(std::vector<node*>& kids);
+        void dump_internal_node(const std::string& name, internal_node* n);
         void indent(int space);
 public:
         virtual void visit(text_node* n);
@@ -29,6 +31,7 @@ public:
         virtual void visit(p_node* n);
         virtual void visit(body_node* n);
         virtual void visit(div_node* n);
+        virtual void visit(abbr_node* n);
 };
 
 #endif

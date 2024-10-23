@@ -34,6 +34,7 @@ static void typeok(int type)
         case TOK_P_TAG:
         case TOK_BODY_TAG:
         case TOK_DIV_TAG:
+        case TOK_ABBR_TAG:
                 break;
         default:
                 errno = EINVAL;

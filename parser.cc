@@ -59,6 +59,8 @@ node* parser::parse_tag(void)
                 n = new body_node{};
         } else if (type == TOK_DIV_TAG) {
                 n = new div_node{};
+        } else if (type == TOK_ABBR_TAG) {
+                n = new abbr_node{};
         } else {
                 errno = EINVAL;
                 err(EX_USAGE, "invalid tagname: %s", token{type}.name().c_str());
