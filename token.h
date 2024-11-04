@@ -36,6 +36,7 @@ enum {
         TOK_BODY_TAG,
         TOK_DIV_TAG,
         TOK_ABBR_TAG,
+        TOK_TABLE_TAG,
         TOK_COUNT,
 };
 

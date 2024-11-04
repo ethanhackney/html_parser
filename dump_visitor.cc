@@ -98,3 +98,8 @@ void dump_visitor::visit(div_node* n)
 {
         dump_internal_node("div_node", n);
 }
+
+void dump_visitor::visit(table_node* n)
+{
+        dump_internal_node("table_node", n);
+}

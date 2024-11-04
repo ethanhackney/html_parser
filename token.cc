@@ -35,6 +35,7 @@ static void typeok(int type)
         case TOK_BODY_TAG:
         case TOK_DIV_TAG:
         case TOK_ABBR_TAG:
+        case TOK_TABLE_TAG:
                 break;
         default:
                 errno = EINVAL;
@@ -102,6 +103,7 @@ std::string token::name(void) const
                 "TOK_P_TAG",
                 "TOK_BODY_TAG",
                 "TOK_DIV_TAG",
+                "TOK_TABLE_TAG",
         };
         return names.at(_type);
 }

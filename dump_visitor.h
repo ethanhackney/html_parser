@@ -10,6 +10,7 @@
 #include "body_node.h"
 #include "div_node.h"
 #include "abbr_node.h"
+#include "table_node.h"
 #include <iostream>
 #include <string>
 #include <unordered_map>
@@ -32,6 +33,7 @@ public:
         virtual void visit(body_node* n);
         virtual void visit(div_node* n);
         virtual void visit(abbr_node* n);
+        virtual void visit(table_node* n);
 };
 
 #endif

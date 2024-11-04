@@ -10,6 +10,7 @@
 #include "text_node.h"
 #include "div_node.h"
 #include "abbr_node.h"
+#include "table_node.h"
 #include <vector>
 
 class parser {

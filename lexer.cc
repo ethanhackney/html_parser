@@ -21,6 +21,7 @@ static std::unordered_map<std::string,int> kwords {
         {"body", TOK_BODY_TAG},
         {"div", TOK_DIV_TAG},
         {"abbr", TOK_ABBR_TAG},
+        {"table", TOK_TABLE_TAG},
 };
 
 lexer::lexer(const std::string& path)
