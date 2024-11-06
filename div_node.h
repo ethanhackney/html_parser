@@ -1,11 +1,11 @@
-#ifndef DIV_NODE_H
-#define DIV_NODE_H
+#ifndef DIV_H
+#define DIV_H
 
 #include "node.h"
 
 class div_node : public internal_node {
 public:
-        virtual void visit(node_visitor* v);
+	virtual void visit(node_visitor* v);
 };
 
 #endif

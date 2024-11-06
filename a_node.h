@@ -1,11 +1,11 @@
-#ifndef A_NODE_H
-#define A_NODE_H
+#ifndef A_H
+#define A_H
 
 #include "node.h"
 
 class a_node : public internal_node {
 public:
-        virtual void visit(node_visitor* v);
+	virtual void visit(node_visitor* v);
 };
 
 #endif

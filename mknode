@@ -1,0 +1,79 @@
+#!/bin/bash
+
+# generate header file for html tag
+function header() {
+  local name=$1
+
+  echo   "#ifndef ${name^^}_H" >${name}_node.h
+  echo   "#define ${name^^}_H" >>${name}_node.h
+  echo   "" >>${name}_node.h
+  echo   "#include \"node.h\"" >>${name}_node.h
+  echo   "" >>${name}_node.h
+  echo   "class ${name}_node : public internal_node {" >>${name}_node.h
+  echo   "public:" >>${name}_node.h
+  printf "\tvirtual void visit(node_visitor* v);\n" >>${name}_node.h
+  echo   "};" >>${name}_node.h
+  echo   "" >>${name}_node.h
+  echo   "#endif" >>${name}_node.h
+}
+
+# generate source file for html tag
+function src() {
+  local name=$1
+
+  echo   "#include \"${name}_node.h\"" >${name}_node.cc
+  echo   "" >>${name}_node.cc
+  echo   "void ${name}_node::visit(node_visitor* v)" >>${name}_node.cc
+  echo   "{" >>${name}_node.cc
+  printf "\tv->visit(this);\n" >>${name}_node.cc
+  echo   "}" >>${name}_node.cc
+}
+
+# html tags
+tags=(
+  abbr  # <abbr>
+  a     # <a>
+  body  # <body>
+  bold  # <bold>
+  div   # <div>
+  html  # <html>
+  p     # <p>
+  table # <table>
+)
+
+# generate header and source files for each tag
+for tag in "${tags[@]}"; do
+  header $tag
+  src $tag
+done
+
+# generate node_visitor abstract class
+echo "#ifndef NODE_VISITOR_H">node_visitor.h
+echo "#define NODE_VISITOR_H">>node_visitor.h
+echo "" >>node_visitor.h
+echo "class text_node;">>node_visitor.h
+for tag in "${tags[@]}"; do
+  echo "class ${tag}_node;">>node_visitor.h
+done
+echo   "">>node_visitor.h
+echo   "class node_visitor {">>node_visitor.h
+echo   "public:">>node_visitor.h
+printf "\tvirtual void visit(text_node* n) = 0;\n">>node_visitor.h
+for tag in "${tags[@]}"; do
+  printf "\tvirtual void visit(${tag}_node* n) = 0;\n">>node_visitor.h
+done
+printf "\tvirtual ~node_visitor() {}\n">>node_visitor.h
+echo "};">>node_visitor.h
+echo "">>node_visitor.h
+echo "#endif">>node_visitor.h
+
+# generate makefile
+echo "CFLAGS = -std=c++11 -Wall -Werror -pedantic -fsanitize=address,undefined" >Makefile
+printf "SRC    = " >>Makefile
+for tag in "${tags[@]}"; do
+  printf "${sep}${tag}_node.cc ">>Makefile
+done
+echo "text_node.cc node.cc main.cc dump_visitor.cc parser.cc lexer.cc token.cc" >>Makefile
+echo "CC     = g++" >>Makefile
+echo "all: \$(SRC)" >>Makefile
+printf "\t\$(CC) \$(CFLAGS) \$^\n" >>Makefile
