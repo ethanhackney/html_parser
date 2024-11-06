@@ -39,6 +39,7 @@ tags=(
   html  # <html>
   p     # <p>
   table # <table>
+  area  # <area>
 )
 
 # generate header and source files for each tag

@@ -103,3 +103,8 @@ void dump_visitor::visit(table_node* n)
 {
         dump_internal_node("table_node", n);
 }
+
+void dump_visitor::visit(area_node* n)
+{
+        dump_internal_node("area_node", n);
+}

@@ -10,6 +10,7 @@ class div_node;
 class html_node;
 class p_node;
 class table_node;
+class area_node;
 
 class node_visitor {
 public:
@@ -22,6 +23,7 @@ public:
 	virtual void visit(html_node* n) = 0;
 	virtual void visit(p_node* n) = 0;
 	virtual void visit(table_node* n) = 0;
+	virtual void visit(area_node* n) = 0;
 	virtual ~node_visitor() {}
 };
 
