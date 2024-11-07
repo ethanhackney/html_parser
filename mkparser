@@ -1,0 +1,716 @@
+#!/bin/bash
+
+# generate header file for html tag
+function header() {
+  local name=$1
+
+  echo   "#ifndef ${name^^}_H" >${name}_node.h
+  echo   "#define ${name^^}_H" >>${name}_node.h
+  echo   "" >>${name}_node.h
+  echo   "#include \"node.h\"" >>${name}_node.h
+  echo   "" >>${name}_node.h
+  echo   "class ${name}_node : public internal_node {" >>${name}_node.h
+  echo   "public:" >>${name}_node.h
+  printf "\tvirtual void visit(node_visitor* v);\n" >>${name}_node.h
+  echo   "};" >>${name}_node.h
+  echo   "" >>${name}_node.h
+  echo   "#endif" >>${name}_node.h
+}
+
+# generate source file for html tag
+function src() {
+  local name=$1
+
+  echo   "#include \"${name}_node.h\"" >${name}_node.cc
+  echo   "" >>${name}_node.cc
+  echo   "void ${name}_node::visit(node_visitor* v)" >>${name}_node.cc
+  echo   "{" >>${name}_node.cc
+  printf "\tv->visit(this);\n" >>${name}_node.cc
+  echo   "}" >>${name}_node.cc
+}
+
+# html tags
+tags=(
+  abbr
+  a
+  body
+  bold
+  div
+  html
+  p
+  table
+  area
+  article
+  aside
+  audio
+  b
+  base
+  bdi
+  bdo
+  blockquote
+  br
+  button
+  canvas
+  caption
+)
+
+# generate header and source files for each tag
+for tag in "${tags[@]}"; do
+  header $tag
+  src $tag
+done
+
+# generate node_visitor abstract class
+echo "#ifndef NODE_VISITOR_H">node_visitor.h
+echo "#define NODE_VISITOR_H">>node_visitor.h
+echo "" >>node_visitor.h
+echo "class text_node;">>node_visitor.h
+for tag in "${tags[@]}"; do
+  echo "class ${tag}_node;">>node_visitor.h
+done
+echo   "">>node_visitor.h
+echo   "class node_visitor {">>node_visitor.h
+echo   "public:">>node_visitor.h
+printf "\tvirtual void visit(text_node* n) = 0;\n">>node_visitor.h
+for tag in "${tags[@]}"; do
+  printf "\tvirtual void visit(${tag}_node* n) = 0;\n">>node_visitor.h
+done
+printf "\tvirtual ~node_visitor() {}\n">>node_visitor.h
+echo "};">>node_visitor.h
+echo "">>node_visitor.h
+echo "#endif">>node_visitor.h
+
+# generate makefile
+echo "CFLAGS = -std=c++11 -Wall -Werror -pedantic -fsanitize=address,undefined" >Makefile
+printf "SRC    = " >>Makefile
+for tag in "${tags[@]}"; do
+  printf "${sep}${tag}_node.cc ">>Makefile
+done
+echo "text_node.cc node.cc main.cc dump_visitor.cc parser.cc lexer.cc token.cc" >>Makefile
+echo "CC     = g++" >>Makefile
+echo "all: \$(SRC)" >>Makefile
+printf "\t\$(CC) \$(CFLAGS) \$^\n" >>Makefile
+
+# generate dump visitor
+cat >dump_visitor.h <<EOF
+#ifndef DUMP_VISITOR_H
+#define DUMP_VISITOR_H
+
+#include "text_node.h"
+EOF
+for tag in "${tags[@]}"; do
+  echo "#include \"${tag}_node.h\"">>dump_visitor.h
+done
+cat >>dump_visitor.h <<EOF
+
+#include "node_visitor.h"
+#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+class dump_visitor : public node_visitor {
+private:
+        int _indent {0};
+
+        void dump_attrs(std::unordered_map<std::string,std::string>& attrs);
+        void dump_kids(std::vector<node*>& kids);
+        void dump_internal_node(const std::string& name, internal_node* n);
+        void indent(int space);
+public:
+        virtual void visit(text_node* n);
+EOF
+
+for tag in "${tags[@]}"; do
+  printf "\tvirtual void visit(${tag}_node* n);\n">>dump_visitor.h
+done
+
+cat >>dump_visitor.h <<EOF
+};
+
+#endif
+EOF
+cat >dump_visitor.cc <<EOF
+#include "dump_visitor.h"
+
+using std::cout;
+
+void dump_visitor::indent(int space)
+{
+        for (auto i = 0; i < space; i++)
+                cout << " ";
+}
+
+void dump_visitor::visit(text_node* n)
+{
+        indent(_indent);
+        cout << "text_node{\n";
+        indent(_indent + 2);
+        cout << '"' << (char)n->c() << "\"\n";
+        indent(_indent);
+        cout << "}";
+}
+
+void dump_visitor::dump_attrs(std::unordered_map<std::string,std::string>& attrs)
+{
+        indent(_indent);
+        cout << "attrs: {\n";
+        for (auto p : attrs) {
+                indent(_indent + 2);
+                cout << p.first << ": " << p.second << ",\n";
+        }
+        indent(_indent);
+        cout << "}";
+}
+
+void dump_visitor::dump_kids(std::vector<node*>& kids)
+{
+        indent(_indent);
+        cout << "kids: [\n";
+        for (auto k : kids) {
+                _indent += 2;
+                k->visit(this);
+                cout << ",\n";
+                _indent -= 2;
+
+        }
+        indent(_indent);
+        cout << "]";
+}
+
+void dump_visitor::dump_internal_node(const std::string& name, internal_node* n)
+{
+        indent(_indent);
+        cout << name << "{\n";
+
+        _indent += 2;
+        dump_attrs(n->attrs());
+        _indent -= 2;
+        cout << ",\n";
+
+        _indent += 2;
+        dump_kids(n->kids());
+        _indent -= 2;
+        cout << "\n";
+
+        indent(_indent);
+        cout << "}";
+}
+
+EOF
+for tag in "${tags[@]}"; do
+  echo "void dump_visitor::visit(${tag}_node* n)">>dump_visitor.cc
+  echo "{">>dump_visitor.cc
+  printf "\tdump_internal_node(\"${tag}_node\", n);\n">>dump_visitor.cc
+  echo "}">>dump_visitor.cc
+  echo "">>dump_visitor.cc
+done
+
+# generate token header and source
+cat >token.h <<EOF
+#ifndef TOKEN_H
+#define TOKEN_H
+
+#include <string>
+#include <array>
+#include <cerrno>
+#include <err.h>
+#include <sysexits.h>
+
+enum {
+        TOK_ERR,
+        TOK_EOF,
+        TOK_LT,
+        TOK_EQ,
+        TOK_STR,
+        TOK_GT,
+        TOK_HREF,
+        TOK_CHAR,
+        TOK_SLASH,
+        TOK_DOWNLOAD,
+        TOK_HREFLANG,
+        TOK_MEDIA,
+        TOK_PING,
+        TOK_REFERRER_POLICY,
+        TOK_REL,
+        TOK_TARGET,
+        TOK_TYPE,
+        TOK_XMLNS,
+        TOK_ACCESS_KEY,
+        TOK_LANG,
+        TOK_AUTO_CAPITALIZE,
+EOF
+for tag in "${tags[@]}"; do
+  printf "\tTOK_${tag^^}_TAG,\n">>token.h
+done
+cat >>token.h <<EOF
+        TOK_COUNT,
+};
+
+class token {
+private:
+        std::string _lex {""};
+        int _type {TOK_ERR};
+public:
+        token(void);
+        token(int type);
+        token(int type, int c);
+        token(int type, const std::string& lex);
+        int type(void) const;
+        std::string lex(void) const;
+        std::string name(void) const;
+};
+
+#endif
+EOF
+cat >token.cc <<EOF
+#include "token.h"
+
+token::token(void)
+{
+}
+
+static void typeok(int type)
+{
+        switch (type) {
+        case TOK_ERR:
+        case TOK_EOF:
+        case TOK_LT:
+        case TOK_HREF:
+        case TOK_EQ:
+        case TOK_STR:
+        case TOK_GT:
+        case TOK_CHAR:
+        case TOK_SLASH:
+        case TOK_DOWNLOAD:
+        case TOK_HREFLANG:
+        case TOK_MEDIA:
+        case TOK_PING:
+        case TOK_REFERRER_POLICY:
+        case TOK_REL:
+        case TOK_TARGET:
+        case TOK_TYPE:
+        case TOK_XMLNS:
+        case TOK_ACCESS_KEY:
+        case TOK_LANG:
+        case TOK_AUTO_CAPITALIZE:
+EOF
+for tag in "${tags[@]}"; do
+  printf "\tcase TOK_${tag^^}_TAG:\n">>token.cc
+done
+cat >>token.cc <<EOF
+                break;
+        default:
+                errno = EINVAL;
+                err(EX_USAGE, "bad token type: %d", type);
+        }
+}
+
+token::token(int type)
+        : _type {type}
+{
+        typeok(_type);
+}
+
+token::token(int type, int c)
+        : _type {type}
+{
+        typeok(_type);
+        _lex += c;
+}
+
+token::token(int type, const std::string& lex)
+        : _lex {lex},
+        _type {type}
+{
+        typeok(_type);
+}
+
+int token::type(void) const
+{
+        return _type;
+}
+
+std::string token::lex(void) const
+{
+        return _lex;
+}
+
+std::string token::name(void) const
+{
+        std::array<std::string,TOK_COUNT> names {
+                "TOK_ERR",
+                "TOK_EOF",
+                "TOK_LT",
+                "TOK_HREF",
+                "TOK_EQ",
+                "TOK_STR",
+                "TOK_GT",
+                "TOK_CHAR",
+                "TOK_SLASH",
+                "TOK_DOWNLOAD",
+                "TOK_HREFLANG",
+                "TOK_MEDIA",
+                "TOK_PING",
+                "TOK_REFERRER_POLICY",
+                "TOK_REL",
+                "TOK_TARGET",
+                "TOK_TYPE",
+                "TOK_XMLNS",
+                "TOK_ACCESS_KEY",
+                "TOK_LANG",
+                "TOK_AUTO_CAPITALIZE",
+EOF
+for tag in "${tags[@]}"; do
+  printf "\t\t\"TOK_${tag^^}_TAG\",\n">>token.cc
+done
+cat >>token.cc <<EOF
+        };
+        return names.at(_type);
+}
+EOF
+
+# generate lexer header and source
+cat >lexer.h <<EOF
+#ifndef LEXER_H
+#define LEXER_H
+
+#include "token.h"
+#include <string>
+#include <cerrno>
+#include <err.h>
+#include <sysexits.h>
+#include <cstdio>
+#include <cctype>
+#include <unordered_map>
+
+class lexer {
+private:
+        std::string _path {};
+        token _cur {};
+        token _peek {};
+        FILE* _fp {nullptr};
+        bool _intag {false};
+        int _putback {0};
+        token next_tok(void);
+public:
+        lexer(const std::string& path);
+        ~lexer();
+        token next(void);
+        token cur(void) const;
+        token peek(void) const;
+        int type(void) const;
+        std::string lex(void) const;
+        std::string name(void) const;
+        void skip(int type);
+};
+
+#endif
+EOF
+cat >lexer.cc <<EOF
+#include "lexer.h"
+
+static std::unordered_map<std::string,int> kwords {
+        {"download", TOK_DOWNLOAD},
+        {"hreflang", TOK_HREFLANG},
+        {"media", TOK_MEDIA},
+        {"ping", TOK_PING},
+        {"referrerpolicy", TOK_REFERRER_POLICY},
+        {"rel", TOK_REL},
+        {"target", TOK_TARGET},
+        {"type", TOK_TYPE},
+        {"xmlns", TOK_XMLNS},
+        {"accesskey", TOK_ACCESS_KEY},
+        {"lang", TOK_LANG},
+        {"autocapitalize", TOK_AUTO_CAPITALIZE},
+        {"href", TOK_HREF},
+EOF
+for tag in "${tags[@]}"; do
+  printf "\t{\"$tag\", TOK_${tag^^}_TAG},\n">>lexer.cc
+done
+cat >>lexer.cc <<EOF
+};
+
+lexer::lexer(const std::string& path)
+        : _path {path},
+        _fp {fopen(path.c_str(), "r")}
+{
+        if (_fp == nullptr)
+                err(EX_SOFTWARE, "could not open %s", _path.c_str());
+}
+
+lexer::~lexer()
+{
+        if (fclose(_fp) < 0)
+                err(EX_SOFTWARE, "could not close %s", _path.c_str());
+}
+
+token lexer::next(void)
+{
+        if (_peek.type() != TOK_ERR)
+                _cur = _peek;
+        else
+                _cur = next_tok();
+
+        if (_cur.type() == TOK_EOF)
+                return _cur;
+
+        if (_cur.type() == TOK_LT)
+                _intag = true;
+        if (_cur.type() == TOK_GT)
+                _intag = false;
+
+        _peek = next_tok();
+        return _cur;
+}
+
+static void skip_comment(FILE *fp);
+
+token lexer::next_tok(void)
+{
+        for (;;) {
+                auto c = _putback;
+                if (c != 0)
+                        _putback = 0;
+                else
+                        c = fgetc(_fp);
+
+                if (_intag && isspace(c))
+                        continue;
+
+                std::string s;
+                switch (c) {
+                case EOF:
+                        return token{TOK_EOF};
+                case '<':
+                        if ((c = fgetc(_fp)) == '!') {
+                                skip_comment(_fp);
+                                continue;
+                        }
+                        _putback = c;
+                        return token{TOK_LT};
+                case '>':
+                        return token{TOK_GT};
+                case '=':
+                        return token{TOK_EQ};
+                case '"':
+                        s = "";
+                        while ((c = fgetc(_fp)) != EOF && c != '"')
+                                s += c;
+                        if (c == EOF) {
+                                errno = EINVAL;
+                                err(EX_USAGE, "bad string");
+                        }
+                        return token{TOK_STR, s};
+                case '/':
+                        return token{TOK_SLASH};
+                }
+
+                if (_intag && isalpha(c)) {
+                        s = "";
+                        while (isalpha(c)) {
+                                s += c;
+                                c = fgetc(_fp);
+                        }
+                        _putback = c;
+
+                        auto p = kwords.find(s);
+                        if (p != kwords.end())
+                                return token{p->second, s};
+
+                        errno = EINVAL;
+                        err(EX_USAGE, "bad word: %s", s.c_str());
+                }
+
+                return token{TOK_CHAR, c};
+        }
+}
+
+static void skip_comment(FILE *fp)
+{
+        for (;;) {
+                errno = EINVAL;
+
+                auto c = fgetc(fp);
+                if (c == EOF)
+                        err(EX_USAGE, "invalid comment");
+                if (c != '-')
+                        continue;
+
+                c = fgetc(fp);
+                if (c == EOF)
+                        err(EX_USAGE, "invalid comment");
+                if (c != '-')
+                        continue;
+
+                c = fgetc(fp);
+                if (c == EOF)
+                        err(EX_USAGE, "invalid comment");
+                if (c != '>')
+                        continue;
+
+                errno = 0;
+                break;
+        }
+}
+
+token lexer::cur(void) const
+{
+        return _cur;
+}
+
+token lexer::peek(void) const
+{
+        return _peek;
+}
+
+int lexer::type(void) const
+{
+        return _cur.type();
+}
+
+std::string lexer::lex(void) const
+{
+        return _cur.lex();
+}
+
+std::string lexer::name(void) const
+{
+        return _cur.name();
+}
+
+void lexer::skip(int type)
+{
+        if (_cur.type() == type) {
+                next();
+                return;
+        }
+        errno = EINVAL;
+        err(EX_USAGE, "expected %s, got %s",
+                token{type}.name().c_str(), _cur.name().c_str());
+}
+EOF
+
+# generate parser header and source
+cat >parser.h <<EOF
+#ifndef PARSER_H
+#define PARSER_H
+
+EOF
+for tag in "${tags[@]}"; do
+  echo "#include \"${tag}_node.h\"">>parser.h
+done
+
+cat >>parser.h <<EOF
+#include "text_node.h"
+#include "lexer.h"
+#include <vector>
+
+class parser {
+private:
+        std::vector<node*> _roots;
+        lexer& _lex;
+
+        node* do_parse(void);
+        node* parse_tag(void);
+public:
+        parser(lexer& lex);
+        void parse(void);
+        node* get_root(size_t i);
+        size_t n_roots(void);
+        ~parser();
+};
+
+#endif
+EOF
+
+cat >parser.cc <<EOF
+#include "parser.h"
+
+parser::~parser()
+{
+        for (auto r : _roots)
+                delete r;
+}
+
+node* parser::get_root(size_t i)
+{
+        return _roots.at(i);
+}
+
+size_t parser::n_roots(void)
+{
+        return _roots.size();
+}
+
+parser::parser(lexer& lex)
+        : _lex {lex}
+{
+        _lex.next();
+}
+
+void parser::parse(void)
+{
+        while (_lex.type() != TOK_EOF)
+                _roots.push_back(do_parse());
+}
+
+node* parser::do_parse(void)
+{
+        if (_lex.type() == TOK_LT) {
+                return parse_tag();
+        } else {
+                auto n = new text_node{_lex.lex().c_str()[0]};
+                _lex.skip(TOK_CHAR);
+                return n;
+        }
+}
+
+node* parser::parse_tag(void)
+{
+        _lex.skip(TOK_LT);
+        auto type = _lex.type();
+
+        _lex.skip(type);
+
+        node* n;
+EOF
+for tag in "${tags[@]}"; do
+  printf "\tif (type == TOK_${tag^^}_TAG) {\n">>parser.cc
+  printf "\t\tn = new ${tag}_node{};\n">>parser.cc
+  printf "\t} else ">>parser.cc
+done
+cat >>parser.cc <<EOF
+        {
+                errno = EINVAL;
+                err(EX_USAGE, "invalid tagname: %s", token{type}.name().c_str());
+        }
+
+        while (_lex.type() != TOK_GT) {
+                auto attr = _lex.lex();
+                _lex.skip(_lex.type());
+                n->set_attr(attr, "on");
+                if (_lex.type() == TOK_EQ) {
+                        _lex.skip(TOK_EQ);
+                        auto v = _lex.lex();
+                        _lex.skip(_lex.type());
+                        n->set_attr(attr, v);
+                }
+        }
+        _lex.skip(TOK_GT);
+
+        for (;;) {
+                if (_lex.type() == TOK_LT) {
+                        if (_lex.peek().type() == TOK_SLASH)
+                                break;
+                }
+                n->add_kid(do_parse());
+        }
+
+        _lex.skip(TOK_LT);
+        _lex.skip(TOK_SLASH);
+        _lex.skip(type);
+        _lex.skip(TOK_GT);
+        return n;
+}
+EOF

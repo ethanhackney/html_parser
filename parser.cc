@@ -47,23 +47,49 @@ node* parser::parse_tag(void)
         _lex.skip(type);
 
         node* n;
-        if (type == TOK_A_TAG) {
-                n = new a_node{};
-        } else if (type == TOK_BOLD) {
-                n = new bold_node{};
-        } else if (type == TOK_HTML) {
-                n = new html_node{};
-        } else if (type == TOK_P_TAG) {
-                n = new p_node{};
-        } else if (type == TOK_BODY_TAG) {
-                n = new body_node{};
-        } else if (type == TOK_DIV_TAG) {
-                n = new div_node{};
-        } else if (type == TOK_ABBR_TAG) {
-                n = new abbr_node{};
-        } else if (type == TOK_TABLE_TAG) {
-                n = new table_node{};
-        } else {
+	if (type == TOK_ABBR_TAG) {
+		n = new abbr_node{};
+	} else 	if (type == TOK_A_TAG) {
+		n = new a_node{};
+	} else 	if (type == TOK_BODY_TAG) {
+		n = new body_node{};
+	} else 	if (type == TOK_BOLD_TAG) {
+		n = new bold_node{};
+	} else 	if (type == TOK_DIV_TAG) {
+		n = new div_node{};
+	} else 	if (type == TOK_HTML_TAG) {
+		n = new html_node{};
+	} else 	if (type == TOK_P_TAG) {
+		n = new p_node{};
+	} else 	if (type == TOK_TABLE_TAG) {
+		n = new table_node{};
+	} else 	if (type == TOK_AREA_TAG) {
+		n = new area_node{};
+	} else 	if (type == TOK_ARTICLE_TAG) {
+		n = new article_node{};
+	} else 	if (type == TOK_ASIDE_TAG) {
+		n = new aside_node{};
+	} else 	if (type == TOK_AUDIO_TAG) {
+		n = new audio_node{};
+	} else 	if (type == TOK_B_TAG) {
+		n = new b_node{};
+	} else 	if (type == TOK_BASE_TAG) {
+		n = new base_node{};
+	} else 	if (type == TOK_BDI_TAG) {
+		n = new bdi_node{};
+	} else 	if (type == TOK_BDO_TAG) {
+		n = new bdo_node{};
+	} else 	if (type == TOK_BLOCKQUOTE_TAG) {
+		n = new blockquote_node{};
+	} else 	if (type == TOK_BR_TAG) {
+		n = new br_node{};
+	} else 	if (type == TOK_BUTTON_TAG) {
+		n = new button_node{};
+	} else 	if (type == TOK_CANVAS_TAG) {
+		n = new canvas_node{};
+	} else 	if (type == TOK_CAPTION_TAG) {
+		n = new caption_node{};
+	} else         {
                 errno = EINVAL;
                 err(EX_USAGE, "invalid tagname: %s", token{type}.name().c_str());
         }

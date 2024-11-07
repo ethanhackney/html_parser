@@ -11,6 +11,18 @@ class html_node;
 class p_node;
 class table_node;
 class area_node;
+class article_node;
+class aside_node;
+class audio_node;
+class b_node;
+class base_node;
+class bdi_node;
+class bdo_node;
+class blockquote_node;
+class br_node;
+class button_node;
+class canvas_node;
+class caption_node;
 
 class node_visitor {
 public:
@@ -24,6 +36,18 @@ public:
 	virtual void visit(p_node* n) = 0;
 	virtual void visit(table_node* n) = 0;
 	virtual void visit(area_node* n) = 0;
+	virtual void visit(article_node* n) = 0;
+	virtual void visit(aside_node* n) = 0;
+	virtual void visit(audio_node* n) = 0;
+	virtual void visit(b_node* n) = 0;
+	virtual void visit(base_node* n) = 0;
+	virtual void visit(bdi_node* n) = 0;
+	virtual void visit(bdo_node* n) = 0;
+	virtual void visit(blockquote_node* n) = 0;
+	virtual void visit(br_node* n) = 0;
+	virtual void visit(button_node* n) = 0;
+	virtual void visit(canvas_node* n) = 0;
+	virtual void visit(caption_node* n) = 0;
 	virtual ~node_visitor() {}
 };
 
